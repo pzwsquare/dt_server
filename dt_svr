@@ -213,19 +213,21 @@ set +e
 
 #安装nginx
 installnginx(){
-    if [[ ! -f /etc/apt/sources.list.d/nginx.list ]]; then
+    # if [[ ! -f /etc/apt/sources.list.d/nginx.list ]]; then
 
-curl -LO --progress-bar https://nginx.org/keys/nginx_signing.key
-apt-key add nginx_signing.key
-rm -rf nginx_signing.key
-touch /etc/apt/sources.list.d/nginx.list
-cat > '/etc/apt/sources.list.d/nginx.list' << EOF
-deb https://nginx.org/packages/mainline/$dist/ $(lsb_release -cs) nginx
-deb-src https://nginx.org/packages/mainline/$dist/ $(lsb_release -cs) nginx
-EOF
-apt-get purge nginx -qq -y
-apt-get update -q
+# curl -LO --progress-bar https://nginx.org/keys/nginx_signing.key
+# apt-key add nginx_signing.key
+# rm -rf nginx_signing.key
+# touch /etc/apt/sources.list.d/nginx.list
+# cat > '/etc/apt/sources.list.d/nginx.list' << EOF
+# deb https://nginx.org/packages/mainline/$dist/ $(lsb_release -cs) nginx
+# deb-src https://nginx.org/packages/mainline/$dist/ $(lsb_release -cs) nginx
+# EOF
+# apt-get purge nginx -qq -y
+# apt-get update -q
 apt-get install nginx -q -y
+
+useradd -s /sbin/nologin -M nginx
 
 cat > '/lib/systemd/system/nginx.service' << EOF
 [Unit]
@@ -282,11 +284,11 @@ http {
 	client_max_body_size 10G;
 }
 EOF
-else
-whiptail --title "错误信息" --msgbox "Nginx已经安装" 8 78 
-clear
+# else
+# whiptail --title "错误信息" --msgbox "Nginx已经安装" 8 78 
+# clear
 #exit 1
-fi
+# fi
 }
 
 #申请证书
@@ -322,18 +324,18 @@ server {
 	root   /usr/share/nginx/html;
 }
 EOF
-	nginx -t
+	# nginx -t
 	systemctl start nginx > /dev/null 2>&1
 	installacme
 	#clear
-	~/.acme.sh/acme.sh --issue --nginx -d $domain -k ec-256 --force --test --log --reloadcmd "systemctl reload trojan || true && nginx -s reload"
+	~/.acme.sh/acme.sh --issue --nginx -d $domain -k ec-256 --force --test --log --reloadcmd "systemctl reload trojan || true -s reload"
 	if [[ $? != 0 ]]; then
 	whiptail --title "错误信息" --msgbox "证书申请测试失败，请检查VPS控制面板防火墙(80 443)是否打开" 8 78
     #clear
 	exit 1
 	fi 
 	#clear
-	~/.acme.sh/acme.sh --issue --nginx -d $domain -k ec-256 --force --log --reloadcmd "systemctl reload trojan || true && nginx -s reload"
+	~/.acme.sh/acme.sh --issue --nginx -d $domain -k ec-256 --force --log --reloadcmd "systemctl reload trojan || true -s reload"
 	if [[ $? != 0 ]]; then
 	whiptail --title "错误信息" --msgbox "证书申请失败，请检查VPS控制面板防火墙(80 443)是否打开" 8 78
     #clear
@@ -691,7 +693,7 @@ detele_kernel(){
 }
 
 function dd_instl(){
-    bash <(wget --no-check-certificate -qO- https://git.io/JvPUW) -d 10 -v 64 -p 'dengta' -a
+    bash <(wget --no-check-certificate -qO- https://git.io/JvPUW) -d 10 -v 64 -p 'dd' -a
 }
 function tg_pxy(){
     bash <(wget --no-check-certificate -qO- https://git.io/JvPUC)
@@ -699,21 +701,20 @@ function tg_pxy(){
 
 toolsMenu() {
 
-    Mainmenu=$(whiptail --clear --ok-button "确定" --backtitle "version:20200505v1" --title "灯塔服务端v2.2" --menu --nocancel "
+    Mainmenu=$(whiptail --clear --ok-button "确定" --backtitle "version:20200714" --title "dt服务端v2.3" --menu --nocancel "
 **********************************************************************************
-简介：灯塔服务端v2.2
-系统：>=debian9
+简介：dt服务端v2.3
+系统：debian10
 Youtube：米月
 电报群：https://t.me/mi_yue
 Youtube频道地址：https://t.im/n21o
 **********************************************************************************
 请选择需要安装的内容，VPS端务必打开80 443端口，不要套用任何CDN加速
-
     " 22 86 5\
-        "1" " 安装灯塔极速版（兼容小部分VPS）"\
-        "2" " 安装灯塔大众版（兼容大部分VPS）"\
+        "1" " 安装dt极速版（兼容小部分VPS）"\
+        "2" " 安装dt大众版（兼容大部分VPS）"\
         "3" " 安装tg代理（默认端口：9443）"\
-        "4" " 安装debian10（登录密码：dengta）"\
+        "4" " 安装debian10（登录密码：dd）"\
         "5" " 退出" 3>&1 1>&2 2>&3)
     case $Mainmenu in
         1)
@@ -727,9 +728,9 @@ Youtube频道地址：https://t.im/n21o
         nginxtrojan
         installbbrplus
         install_sdns
-        whiptail --title "灯塔服务端安装成功" --msgbox "
+        whiptail --title "dt服务端安装成功" --msgbox "
 *************************************************************************
-灯塔急速版已安装完成，复制以下信息，在OpenWrt里进行配置
+dt急速版已安装完成，复制以下信息，在OpenWrt里进行配置
 服务器地址：$domain
 服务器端口：443
 服务器密码：$passwordd
@@ -747,9 +748,9 @@ Youtube频道地址：https://t.im/n21o
         nginxtrojan
         installbbr
         installDnsmasq
-        whiptail --title "灯塔服务端安装成功" --msgbox "
+        whiptail --title "dt服务端安装成功" --msgbox "
 *************************************************************************
-灯塔大众版已安装完成，复制以下信息，在OpenWrt里进行配置
+dt大众版已安装完成，复制以下信息，在OpenWrt里进行配置
 服务器地址：$domain
 服务器端口：443
 服务器密码：$passwordd
